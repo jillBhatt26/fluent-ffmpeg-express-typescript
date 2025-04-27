@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { container } from 'tsyringe';
 import { ValidationError } from 'yup';
-import { CustomError } from '../../../common/CustomError';
+import { CustomError } from '@common/CustomError';
 import {
     addSubtitlesRequestBodySchema,
     trimVideoRequestBodySchema,

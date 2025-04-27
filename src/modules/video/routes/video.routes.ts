@@ -9,9 +9,9 @@ videoRoutes.post(
     videoRequestsValidations.upload,
     videoControllers.upload
 );
-videoRoutes.post('/trim', videoControllers.trim);
-videoRoutes.post('/download', videoControllers.download);
-videoRoutes.post('/subtitles', videoControllers.addSubtitles);
-videoRoutes.post('/render', videoControllers.render);
+videoRoutes.post('/:id/trim', videoControllers.trim);
+videoRoutes.post('/:id/download', videoControllers.download);
+videoRoutes.post('/:id/subtitles', videoControllers.addSubtitles);
+videoRoutes.post('/:id/render', videoControllers.render);
 
 export { videoRoutes };

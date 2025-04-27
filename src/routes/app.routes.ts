@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { videoRoutes } from '../modules/video/routes/video.routes';
+import { videoRoutes } from '@modules/video/routes/video.routes';
 
 const appRoutes: Router = Router();
 

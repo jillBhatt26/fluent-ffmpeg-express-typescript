@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
-import { PORT } from './config/env.config';
-import { errorMiddleware } from './middleware/error.middleware';
-import { appRoutes } from './routes/app.routes';
+import { PORT } from '@config/env.config';
+import { errorMiddleware } from '@middleware/error.middleware';
+import { appRoutes } from '@routes/app.routes';
 
 const app: Application = express();
 
