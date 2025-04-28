@@ -17,7 +17,17 @@ class VideoControllers {
             if (!req.uploadFileName || !req.uploadFilePath)
                 throw new CustomError('No video uploaded!', 400);
 
-            res.status(201).json({ success: true });
+            const duration: number = await this.ffpmegServices.getVideoDuration(
+                req.uploadFileName
+            );
+
+            res.status(201).json({
+                success: true,
+                data: {
+                    name: req.uploadFileName,
+                    duration
+                }
+            });
 
             return;
         } catch (error: unknown) {
