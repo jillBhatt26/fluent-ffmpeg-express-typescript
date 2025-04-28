@@ -1,6 +1,10 @@
+import fs from 'fs';
+import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import { autoInjectable, container, inject, singleton } from 'tsyringe';
 import { CustomError } from '@common/CustomError';
+import { UPLOAD_DIR_PATH } from '@config/constants.config';
+import { CloudStorageServices } from '../services/cloudstorage.services';
 import { FFMPEGServices } from '../services/ffmpeg.services';
 import { VideoServices } from '../services/video.services';
 
@@ -9,6 +13,8 @@ import { VideoServices } from '../services/video.services';
 class VideoControllers {
     constructor(
         @inject(FFMPEGServices) private ffpmegServices: FFMPEGServices,
+        @inject(CloudStorageServices)
+        private cloudStorageServices: CloudStorageServices,
         @inject(VideoServices) private videoServices: VideoServices
     ) {}
 
@@ -17,15 +23,29 @@ class VideoControllers {
             if (!req.uploadFileName || !req.uploadFilePath)
                 throw new CustomError('No video uploaded!', 400);
 
-            const duration: number = await this.ffpmegServices.getVideoDuration(
+            const [duration, size] = await Promise.all([
+                this.ffpmegServices.getVideoDuration(req.uploadFileName),
+                this.ffpmegServices.getVideoSize(req.uploadFileName)
+            ]);
+
+            const uploadVideoData = await this.cloudStorageServices.upload(
                 req.uploadFileName
             );
+
+            if (!uploadVideoData || !uploadVideoData.id)
+                throw new CustomError('Upload video to cloud failed!', 500);
+
+            const videoPath = path.resolve(UPLOAD_DIR_PATH, req.uploadFileName);
+
+            fs.unlinkSync(videoPath);
 
             res.status(201).json({
                 success: true,
                 data: {
                     name: req.uploadFileName,
-                    duration
+                    duration,
+                    size,
+                    cloudVideoID: uploadVideoData.id
                 }
             });
 
