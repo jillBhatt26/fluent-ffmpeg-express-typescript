@@ -8,16 +8,20 @@ const errorMiddleware = async (
     __: NextFunction
 ) => {
     if (error instanceof CustomError) {
-        return res.status(error.code).json({
+        res.status(error.code).json({
             success: false,
             message: error.message
         });
+
+        return;
     }
 
-    return res.status(500).json({
+    res.status(500).json({
         success: false,
         message: error.message ?? 'Unexpected execution failure occurred!'
     });
+
+    return;
 };
 
 export { errorMiddleware };

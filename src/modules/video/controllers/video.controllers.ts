@@ -14,7 +14,9 @@ class VideoControllers {
 
     upload = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            return res.status(200).json({ success: true });
+            res.status(201).json({ success: true });
+
+            return;
         } catch (error: unknown) {
             if (error instanceof CustomError) return next(error);
 
@@ -29,7 +31,9 @@ class VideoControllers {
 
     trim = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            return res.status(200).json({ success: true });
+            res.status(200).json({ success: true });
+
+            return;
         } catch (error: unknown) {
             if (error instanceof CustomError) return next(error);
 
@@ -44,7 +48,9 @@ class VideoControllers {
 
     addSubtitles = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            return res.status(200).json({ success: true });
+            res.status(200).json({ success: true });
+
+            return;
         } catch (error: unknown) {
             if (error instanceof CustomError) return next(error);
 
@@ -59,7 +65,9 @@ class VideoControllers {
 
     render = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            return res.status(200).json({ success: true });
+            res.status(200).json({ success: true });
+
+            return;
         } catch (error: unknown) {
             if (error instanceof CustomError) return next(error);
 
@@ -74,7 +82,9 @@ class VideoControllers {
 
     download = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            return res.status(200).json({ success: true });
+            res.status(200).json({ success: true });
+
+            return;
         } catch (error: unknown) {
             if (error instanceof CustomError) return next(error);
 

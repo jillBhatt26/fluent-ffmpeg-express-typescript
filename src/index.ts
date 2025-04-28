@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', appRoutes);
 app.use(errorMiddleware);
 app.use((_: Request, res: Response, __: NextFunction) => {
-    return res.status(404).json({
+    res.status(404).json({
         success: false,
         message: 'Invalid route requested!'
     });
@@ -33,5 +33,5 @@ app.use((_: Request, res: Response, __: NextFunction) => {
 
 // listen
 app.listen(PORT, () => {
-    console.log(`🚀🚀🚀...Server exposed on PORT: ${PORT}...🚀🚀🚀`);
+    console.log(`🚀🚀🚀...Server  exposed on PORT: ${PORT}...🚀🚀🚀`);
 });
