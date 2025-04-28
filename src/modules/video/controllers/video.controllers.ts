@@ -14,6 +14,9 @@ class VideoControllers {
 
     upload = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            if (!req.uploadFileName || !req.uploadFilePath)
+                throw new CustomError('No video uploaded!', 400);
+
             res.status(201).json({ success: true });
 
             return;
