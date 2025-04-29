@@ -74,7 +74,10 @@ class CloudStorageServices {
             }
         });
 
-    fetch = (videoName: string, signedUrlTimeout = SIGNED_URL_TIMEOUT) =>
+    fetchSignedUrl = (
+        videoName: string,
+        signedUrlTimeout = SIGNED_URL_TIMEOUT
+    ) =>
         new Promise(async (resolve, reject) => {
             try {
                 const { data, error } = await supabase.storage

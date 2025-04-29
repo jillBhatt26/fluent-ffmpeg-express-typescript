@@ -39,13 +39,17 @@ class VideoControllers {
 
             fs.unlinkSync(videoPath);
 
+            const video = await this.videoServices.createVideo({
+                name: req.uploadFileName,
+                duration,
+                size,
+                cloudID: uploadVideoData.id
+            });
+
             res.status(201).json({
                 success: true,
                 data: {
-                    name: req.uploadFileName,
-                    duration,
-                    size,
-                    cloudVideoID: uploadVideoData.id
+                    video
                 }
             });
 
@@ -64,6 +68,13 @@ class VideoControllers {
 
     trim = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const videoToTrim = await this.videoServices.getVideoByID(
+                req.params.id
+            );
+
+            if (!videoToTrim)
+                throw new CustomError('Requested video not found!', 404);
+
             res.status(200).json({ success: true });
 
             return;

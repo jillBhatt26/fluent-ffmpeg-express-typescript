@@ -6,10 +6,33 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
+  output   = "../node_modules/.prisma/client" // NOTE: Correct output path value
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum VideoStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Video {
+  id        String   @id @default(cuid())
+
+  name      String   @db.VarChar(255)
+  duration  Int
+  size      Int
+  cloudID   String   @unique @db.VarChar(255)
+  status    VideoStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("videos")
 }
