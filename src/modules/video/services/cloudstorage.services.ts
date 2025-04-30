@@ -78,11 +78,32 @@ class CloudStorageServices {
         videoName: string,
         signedUrlTimeout = SIGNED_URL_TIMEOUT
     ) =>
-        new Promise(async (resolve, reject) => {
+        new Promise<string>(async (resolve, reject) => {
             try {
                 const { data, error } = await supabase.storage
                     .from(this.bucketName)
                     .createSignedUrl(videoName, signedUrlTimeout);
+
+                if (error)
+                    throw new CustomError(
+                        error.message ?? 'File fetch failed!',
+                        500
+                    );
+
+                return resolve(data.signedUrl);
+            } catch (error) {
+                if (error instanceof CustomError) return reject(error);
+
+                return reject(new CustomError('File fetch failed!', 500));
+            }
+        });
+
+    download = (filename: string) =>
+        new Promise<Blob>(async (resolve, reject) => {
+            try {
+                const { data, error } = await supabase.storage
+                    .from(this.bucketName)
+                    .download(filename);
 
                 if (error)
                     throw new CustomError(

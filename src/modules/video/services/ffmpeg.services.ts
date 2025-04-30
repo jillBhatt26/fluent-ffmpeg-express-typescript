@@ -53,6 +53,9 @@ class FFMPEGServices {
                 return resolve(stats.size);
             });
         });
+
+    trimVideo = (videoURL: string, start: string, duration: number) =>
+        new Promise(async (resolve, reject) => {});
 }
 
 export { FFMPEGServices };

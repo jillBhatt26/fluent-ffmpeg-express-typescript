@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import { autoInjectable, container, inject, singleton } from 'tsyringe';
@@ -6,6 +5,7 @@ import { CustomError } from '@common/CustomError';
 import { UPLOAD_DIR_PATH } from '@config/constants.config';
 import { CloudStorageServices } from '../services/cloudstorage.services';
 import { FFMPEGServices } from '../services/ffmpeg.services';
+import { LocalStorageServices } from '../services/localStorage.services';
 import { VideoServices } from '../services/video.services';
 
 @autoInjectable()
@@ -15,7 +15,9 @@ class VideoControllers {
         @inject(FFMPEGServices) private ffpmegServices: FFMPEGServices,
         @inject(CloudStorageServices)
         private cloudStorageServices: CloudStorageServices,
-        @inject(VideoServices) private videoServices: VideoServices
+        @inject(VideoServices) private videoServices: VideoServices,
+        @inject(LocalStorageServices)
+        private localStorageServices: LocalStorageServices
     ) {}
 
     upload = async (req: Request, res: Response, next: NextFunction) => {
@@ -35,9 +37,11 @@ class VideoControllers {
             if (!uploadVideoData || !uploadVideoData.id)
                 throw new CustomError('Upload video to cloud failed!', 500);
 
-            const videoPath = path.resolve(UPLOAD_DIR_PATH, req.uploadFileName);
+            const isLocalFileDeleted: boolean =
+                await this.localStorageServices.deleteFile(req.uploadFileName);
 
-            fs.unlinkSync(videoPath);
+            if (!isLocalFileDeleted)
+                throw new CustomError('Failed to delete local video', 500);
 
             const video = await this.videoServices.createVideo({
                 name: req.uploadFileName,
@@ -74,6 +78,26 @@ class VideoControllers {
 
             if (!videoToTrim)
                 throw new CustomError('Requested video not found!', 404);
+
+            // const fileBlob = await this.cloudStorageServices.download(
+            //     videoToTrim.name
+            // );
+
+            // await this.localStorageServices.saveFileFromBlob(
+            //     fileBlob,
+            //     videoToTrim.name
+            // );
+
+            const videoURL: string =
+                await this.cloudStorageServices.fetchSignedUrl(
+                    videoToTrim.name
+                );
+
+            await this.ffpmegServices.trimVideo(
+                videoURL,
+                req.body.start,
+                parseInt(req.body.duration)
+            );
 
             res.status(200).json({ success: true });
 
