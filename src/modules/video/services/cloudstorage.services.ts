@@ -46,7 +46,7 @@ class CloudStorageServices {
             }
         });
 
-    upload = (videoName: string) =>
+    upload = (videoName: string, upsert: boolean = false) =>
         new Promise<{
             id: string;
             path: string;
@@ -57,7 +57,9 @@ class CloudStorageServices {
 
                 const { data, error } = await supabase.storage
                     .from(this.bucketName)
-                    .upload(videoName, file);
+                    .upload(videoName, file, {
+                        upsert
+                    });
 
                 if (error) {
                     throw new CustomError(

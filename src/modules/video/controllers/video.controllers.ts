@@ -1,12 +1,11 @@
-import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import { autoInjectable, container, inject, singleton } from 'tsyringe';
 import { CustomError } from '@common/CustomError';
-import { UPLOAD_DIR_PATH } from '@config/constants.config';
 import { CloudStorageServices } from '../services/cloudstorage.services';
 import { FFMPEGServices } from '../services/ffmpeg.services';
 import { LocalStorageServices } from '../services/localStorage.services';
 import { VideoServices } from '../services/video.services';
+import { getSecondsFromTS } from '../utils/getSecondsFromTS';
 
 @autoInjectable()
 @singleton()
@@ -25,10 +24,8 @@ class VideoControllers {
             if (!req.uploadFileName || !req.uploadFilePath)
                 throw new CustomError('No video uploaded!', 400);
 
-            const [duration, size] = await Promise.all([
-                this.ffpmegServices.getVideoDuration(req.uploadFileName),
-                this.ffpmegServices.getVideoSize(req.uploadFileName)
-            ]);
+            const { duration, size } =
+                await this.ffpmegServices.getVideoMetaData(req.uploadFileName);
 
             const uploadVideoData = await this.cloudStorageServices.upload(
                 req.uploadFileName
@@ -93,13 +90,52 @@ class VideoControllers {
                     videoToTrim.name
                 );
 
-            await this.ffpmegServices.trimVideo(
+            const startSec = getSecondsFromTS(req.body.start);
+            const endSec = getSecondsFromTS(req.body.end);
+
+            if (endSec <= startSec)
+                throw new CustomError(
+                    'Improper start and end timestamps provided',
+                    400
+                );
+
+            const isVideoTrimmed: boolean = await this.ffpmegServices.trimVideo(
                 videoURL,
+                videoToTrim.name,
                 req.body.start,
-                parseInt(req.body.duration)
+                endSec - startSec
             );
 
-            res.status(200).json({ success: true });
+            if (!isVideoTrimmed)
+                throw new CustomError('Failed to trim the video', 500);
+
+            const trimmedVideoUploadData =
+                await this.cloudStorageServices.upload(videoToTrim.name, true);
+
+            if (!trimmedVideoUploadData)
+                throw new CustomError('Failed to trim video', 500);
+
+            const { duration, size } =
+                await this.ffpmegServices.getVideoMetaData(videoToTrim.name);
+
+            const updatedVideo = await this.videoServices.updateVideoData(
+                videoToTrim.id,
+                {
+                    duration,
+                    size,
+                    cloudID: trimmedVideoUploadData.id,
+                    status: 'PROCESSING'
+                }
+            );
+
+            await this.localStorageServices.deleteFile(videoToTrim.name);
+
+            res.status(200).json({
+                success: isVideoTrimmed,
+                data: {
+                    video: updatedVideo
+                }
+            });
 
             return;
         } catch (error: unknown) {
