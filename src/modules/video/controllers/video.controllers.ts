@@ -76,15 +76,6 @@ class VideoControllers {
             if (!videoToTrim)
                 throw new CustomError('Requested video not found!', 404);
 
-            // const fileBlob = await this.cloudStorageServices.download(
-            //     videoToTrim.name
-            // );
-
-            // await this.localStorageServices.saveFileFromBlob(
-            //     fileBlob,
-            //     videoToTrim.name
-            // );
-
             const videoURL: string =
                 await this.cloudStorageServices.fetchSignedUrl(
                     videoToTrim.name
@@ -169,7 +160,14 @@ class VideoControllers {
 
     render = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            res.status(200).json({ success: true });
+            await this.videoServices.updateVideoStatus(
+                req.params.id,
+                'COMPLETED'
+            );
+
+            res.status(200).json({
+                success: true
+            });
 
             return;
         } catch (error: unknown) {
@@ -186,7 +184,32 @@ class VideoControllers {
 
     download = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            res.status(200).json({ success: true });
+            const videoToDownload = await this.videoServices.getVideoByID(
+                req.params.id
+            );
+
+            if (!videoToDownload)
+                throw new CustomError('Video to download not found!', 404);
+
+            if (videoToDownload.status !== 'COMPLETED')
+                throw new CustomError('Incomplete video render status.', 400);
+
+            const videoBlob = await this.cloudStorageServices.download(
+                videoToDownload.name
+            );
+
+            const isVideoDownloaded =
+                await this.localStorageServices.saveFileFromBlob(
+                    videoBlob,
+                    videoToDownload.name
+                );
+
+            if (!isVideoDownloaded)
+                throw new CustomError('Download video failed!', 500);
+
+            res.status(200).json({
+                success: true
+            });
 
             return;
         } catch (error: unknown) {
