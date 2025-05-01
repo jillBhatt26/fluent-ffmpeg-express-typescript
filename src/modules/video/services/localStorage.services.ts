@@ -2,14 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import { autoInjectable, singleton } from 'tsyringe';
 import { CustomError } from '@common/CustomError';
-import { UPLOAD_DIR_PATH } from '@config/constants.config';
+import {
+    DOWNLOAD_DIR_PATH,
+    UPLOAD_DIR_PATH,
+    SUBTITLES_DIR_PATH
+} from '@config/constants.config';
 
 @autoInjectable()
 @singleton()
 class LocalStorageServices {
     saveFileFromBlob = (blob: Blob, videoName: string) =>
         new Promise<boolean>(async (resolve, reject) => {
-            const videoPath: string = path.resolve(UPLOAD_DIR_PATH, videoName);
+            const videoPath: string = path.resolve(
+                DOWNLOAD_DIR_PATH,
+                videoName
+            );
 
             try {
                 const arrayBuffer = await blob.arrayBuffer();
@@ -29,6 +36,26 @@ class LocalStorageServices {
                     );
                 }
             }
+        });
+
+    generateVideoSRTFile = (videoName: string, subtitleFileContents: string) =>
+        new Promise(async (resolve, reject) => {
+            const subtitlePath = path.resolve(
+                SUBTITLES_DIR_PATH,
+                `${videoName.replace(path.extname(videoName), '.srt')}`
+            );
+
+            fs.writeFile(subtitlePath, subtitleFileContents, error => {
+                if (error)
+                    return reject(
+                        new CustomError(
+                            error.message ?? 'Failed to generate .srt file',
+                            500
+                        )
+                    );
+
+                return resolve(true);
+            });
         });
 
     deleteFile = (filename: string) =>

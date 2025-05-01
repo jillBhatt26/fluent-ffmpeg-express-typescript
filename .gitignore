@@ -6,4 +6,9 @@ build
 !example.env
 generated/prisma/
 uploads/*
-!uploads.gitkeep
+!uploads/.gitkeep
+downloads/*
+!downloads/.gitkeep
+subtitles/*
+!subtitles/.gitkeep
+!subtitles/sample.srt

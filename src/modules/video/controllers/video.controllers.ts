@@ -6,6 +6,7 @@ import { FFMPEGServices } from '../services/ffmpeg.services';
 import { LocalStorageServices } from '../services/localStorage.services';
 import { VideoServices } from '../services/video.services';
 import { getSecondsFromTS } from '../utils/getSecondsFromTS';
+import { SubtitlesService } from '../services/subtitles.service';
 
 @autoInjectable()
 @singleton()
@@ -16,7 +17,8 @@ class VideoControllers {
         private cloudStorageServices: CloudStorageServices,
         @inject(VideoServices) private videoServices: VideoServices,
         @inject(LocalStorageServices)
-        private localStorageServices: LocalStorageServices
+        private localStorageServices: LocalStorageServices,
+        @inject(SubtitlesService) private subtitleService: SubtitlesService
     ) {}
 
     upload = async (req: Request, res: Response, next: NextFunction) => {
@@ -143,7 +145,42 @@ class VideoControllers {
 
     addSubtitles = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            res.status(200).json({ success: true });
+            const video = await this.videoServices.getVideoByID(req.params.id);
+
+            if (!video)
+                throw new CustomError('Video to add subtitles not found!', 404);
+
+            const subtitlesContent =
+                this.subtitleService.generateSubtitleFileContent(
+                    req.body.subtitles
+                );
+
+            const isSRTGenerated =
+                await this.localStorageServices.generateVideoSRTFile(
+                    video.name,
+                    subtitlesContent
+                );
+
+            if (!isSRTGenerated)
+                throw new CustomError(
+                    'Failed to generate video subtitles',
+                    500
+                );
+
+            const videoURL = await this.cloudStorageServices.fetchSignedUrl(
+                video.name
+            );
+
+            console.log('1...');
+
+            const areSubtitlesApplied =
+                await this.ffpmegServices.addSubtitlesToVideo(
+                    videoURL,
+                    video.name
+                );
+            console.log('2...');
+
+            res.status(200).json({ success: areSubtitlesApplied });
 
             return;
         } catch (error: unknown) {

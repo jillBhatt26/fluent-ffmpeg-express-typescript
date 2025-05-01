@@ -5,7 +5,7 @@ import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg';
 import ffmpeg from 'fluent-ffmpeg';
 import { autoInjectable, singleton } from 'tsyringe';
 import { CustomError } from '@common/CustomError';
-import { UPLOAD_DIR_PATH } from '@config/constants.config';
+import { SUBTITLES_DIR_PATH, UPLOAD_DIR_PATH } from '@config/constants.config';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
@@ -116,6 +116,29 @@ class FFMPEGServices {
                 }
             }
         );
+
+    addSubtitlesToVideo = (videoURL: string, videoName: string) =>
+        new Promise<boolean>(async (resolve, reject) => {
+            const subtitlesPath: string = path.resolve(
+                SUBTITLES_DIR_PATH,
+                `${videoName.replace(path.extname(videoName), '.srt')}`
+            );
+
+            const outputVideoPath: string = path.resolve(
+                UPLOAD_DIR_PATH,
+                videoName
+            );
+
+            ffmpeg(videoURL)
+                .videoFilter(`subtitles=${subtitlesPath}`)
+                .save(outputVideoPath)
+                .on('end', () => {
+                    return resolve(true);
+                })
+                .on('error', error => {
+                    return reject(new CustomError(error.message, 500));
+                });
+        });
 }
 
 export { FFMPEGServices };
