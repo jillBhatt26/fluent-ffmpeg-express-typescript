@@ -171,14 +171,11 @@ class VideoControllers {
                 video.name
             );
 
-            console.log('1...');
-
             const areSubtitlesApplied =
                 await this.ffpmegServices.addSubtitlesToVideo(
                     videoURL,
                     video.name
                 );
-            console.log('2...');
 
             res.status(200).json({ success: areSubtitlesApplied });
 
